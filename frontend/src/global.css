@@ -1,0 +1,56 @@
+@import 'tailwindcss';
+
+:root {
+  scroll-behavior: smooth; /* smooth anchor scrolling */
+}
+
+@theme {
+  /* Main Colors */
+  --color-primary: oklch(55.93% 0.151 244.75deg);
+
+  --color-light: oklch(100% 0 0deg);
+  --color-accent: oklch(96.11% 0.017 264deg);
+
+  --color-dark: oklch(21.18% 0.01 273deg);
+  --color-dark-light: oklch(30% 0.01 273deg);
+  --color-muted: oklch(55.81% 0.04 251.7deg);
+
+  /* Text */
+  --color-txt-primary: var(--color-dark);
+  --color-txt-muted: var(--color-muted);
+  --color-txt-highlight: var(--color-primary);
+
+  /* Backgrounds */
+  --color-bg-highlight: var(--color-primary);
+  --color-bg-dark: var(--color-accent);
+  --color-bg-light: var(--color-light);
+
+  /* Pricing Cards */
+  --color-bg-card-standard: var(--color-bg-dark);
+  --color-bg-card-exclusive: var(--color-primary);
+  --color-txt-card-standard: var(--color-txt-primary);
+  --color-txt-card-exclusive: var(--color-light);
+
+  /* Components */
+  --color-nav-txt: var(--color-dark);
+
+  /*Fonts*/
+}
+
+.dark {
+  /* Components */
+
+  /* Text */
+  --color-txt-primary: var(--color-light);
+  --color-txt-muted: var(--color-muted);
+
+  /* Backgrounds */
+  --color-bg-dark: var(--color-dark);
+  --color-bg-light: var(--color-dark-light);
+}
+
+@layer components {
+  .flex-div {
+    @apply flex justify-center;
+  }
+}
