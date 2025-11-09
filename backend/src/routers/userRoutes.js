@@ -1,9 +1,15 @@
 const express = require("express");
 const router = express.Router();
+const authenticateToken = require("../middleware/auth");
 
-const { handleUserGreetings } = require("../controllers/userControllers");
+const { login, logout, updateUser } = require("../controllers/userControllers");
 
 // Example route: User greetings
-router.get("/greet", handleUserGreetings);
+router.post("/login", login);
+router.post("/logout", logout);
+router.put("/update", updateUser);
+router.get("/protected", authenticateToken, (req, res) => {
+  res.send(`Hello, ${req.user.username}. This is a protected route.`);
+});
 
 module.exports = router;
