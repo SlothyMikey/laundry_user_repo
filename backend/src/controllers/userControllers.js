@@ -6,7 +6,7 @@ const generateAccessToken = (payload) => {
   if (!process.env.ACCESS_TOKEN_SECRET)
     throw new Error("ACCESS_TOKEN_SECRET missing");
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m", // Short-lived access token
+    expiresIn: "1m", // Short-lived access token
   });
 };
 
@@ -129,7 +129,7 @@ const logout = (req, res) => {
   );
 };
 
-const updateUser = (req, res) => {
+const updateUserPassword = (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: "Username and password required." });
@@ -172,4 +172,4 @@ const updateUser = (req, res) => {
   );
 };
 
-module.exports = { login, refresh, logout, updateUser };
+module.exports = { login, refresh, logout, updateUserPassword };
