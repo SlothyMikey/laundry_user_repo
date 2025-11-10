@@ -25,18 +25,23 @@ export default function Login() {
         <div className="w-1/2 flex flex-col justify-center items-center">
           {/* Top Section */}
           <div className="flex flex-col items-center gap-1">
-            <Logo className="w-16 h-16 text-blue-500 mx-auto mt-4 p-2 bg-light rounded" />
+            <Logo className="w-16 h-16 text-light mx-auto mt-4 p-2 bg-bg-highlight rounded-xl shadow-sm" />
             <p className="font-semibold text-lg text-txt-highlight">
               Laver Savon
             </p>
-            <p className="text-lg">Laundry Management System</p>
+            <p className="text-lg font-thin">Laundry Management System</p>
           </div>
           {/* Login Form Section */}
           <LoginForm />
-          {/* Bottom Note */}
-          <p className="text-muted text-center mt-4 text-sm">
-            For authorized personnel only. Unauthorized access is prohibited.
-          </p>
+          {/* Footer */}
+          <div className="text-center pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Professional Laundry Services
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              © 2025 Laver-Savon. All rights reserved.
+            </p>
+          </div>
         </div>
       </section>
     </>

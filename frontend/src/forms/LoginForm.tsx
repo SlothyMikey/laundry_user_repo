@@ -1,87 +1,105 @@
 import { useState } from 'react';
 import Button from '@mui/material/Button';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import useLogin from '@/hooks/useLogin';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import { Shield } from '@mui/icons-material';
 
 export default function LoginForm() {
-  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { login, loading, error } = useLogin();
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const username = String(data.get('username') ?? '');
-    const password = String(data.get('password') ?? '');
+  async function handleGoogleSuccess(credentialResponse: any) {
+    setLoading(true);
+    setError(null);
 
-    console.log('Logging in...'); // Debug log
-    const { ok } = await login(username, password);
-    console.log('Login result:', ok); // Debug log
+    try {
+      const decoded: any = jwtDecode(credentialResponse.credential);
 
-    if (ok) {
-      console.log('Navigating to dashboard'); // Debug log
+      const resp = await fetch('/api/users/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          googleToken: credentialResponse.credential,
+          email: decoded.email,
+          name: decoded.name,
+        }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json();
+        setError(data.error || 'Login failed');
+        setLoading(false);
+        return;
+      }
+
+      const data = await resp.json();
+      localStorage.setItem('token', data.accessToken);
       navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError('Authentication failed');
+      setLoading(false);
     }
   }
+
   return (
     <>
       {loading ? (
         <div className="loader mx-auto my-8"></div>
       ) : (
-        <>
-          <div className="w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-            <div className="flex flex-col items-center mb-4 space-y-2">
-              <p className="text-lg font-bold">Employee Access Only</p>
-              <p className="text-muted">
-                Sign in to manage orders, inventory, and more..
+        <div className="max-w-md mx-auto mt-8">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                Sign In
+              </h2>
+              <p className="text-sm text-gray-600">
+                Access your laundry management dashboard
               </p>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2" htmlFor="username">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your username"
-                  required
-                />
+
+            {/* Google Sign In Button */}
+            <div className="flex justify-center mb-6">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google login failed')}
+                text="signin_with"
+                theme="outline"
+                size="large"
+                width="320"
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
               </div>
-              <div className="relative mb-4">
-                <label className="block text-gray-700 mb-2" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  type={visible ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your password"
-                  required
-                />
-                <div
-                  className="absolute right-3 top-10 cursor-pointer"
-                  onClick={() => setVisible(!visible)}
-                >
-                  {visible ? <Visibility /> : <VisibilityOff />}
-                </div>
-                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              <div className="relative flex justify-center">
+                <span className="px-3 text-xs text-gray-500 bg-white uppercase tracking-wider">
+                  Secure Login
+                </span>
               </div>
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                sx={{ mt: 2 }}
-              >
-                Sign In
-              </Button>
-            </form>
+            </div>
+
+            {/* Access Notice */}
+            <div className="flex items-center justify-center gap-2 bg-blue-50 py-3 px-4 rounded-lg">
+              <Shield className="text-blue-600" sx={{ fontSize: 18 }} />
+              <p className="text-sm text-blue-700 font-medium">
+                Access for authorized staff only
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
           </div>
-        </>
+        </div>
       )}
     </>
   );
