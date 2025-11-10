@@ -18,6 +18,22 @@ const generateRefreshToken = (payload) => {
   });
 };
 
+const verifyToken = (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    return res.status(200).json({ valid: true, user: decoded });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+};
+
 const login = (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
@@ -35,7 +51,7 @@ const login = (req, res) => {
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+    if (!ok) return res.status(401).json({ error: "Incorrect Password" });
 
     const payload = { user_id: user.user_id, username: user.username };
 
@@ -74,7 +90,7 @@ const login = (req, res) => {
 
 const refresh = (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-
+  console.log("Refresh Token:", refreshToken);
   if (!refreshToken) {
     return res.status(401).json({ error: "Refresh token not found" });
   }
@@ -172,4 +188,4 @@ const updateUserPassword = (req, res) => {
   );
 };
 
-module.exports = { login, refresh, logout, updateUserPassword };
+module.exports = { verifyToken, login, refresh, logout, updateUserPassword };
