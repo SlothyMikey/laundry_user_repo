@@ -1,23 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const authenticateToken = require("../middleware/auth");
-
 const {
   verifyToken,
   login,
-  logout,
+  googleLogin,
   refresh,
-  updateUserPassword,
+  logout,
 } = require("../controllers/userControllers");
 
-// Example route: User greetings
+router.post("/login", login);
+router.post("/google-login", googleLogin);
 router.get("/verify", verifyToken);
 router.post("/refresh", refresh);
-router.post("/login", login);
 router.post("/logout", logout);
-router.put("/update", updateUserPassword);
-router.get("/protected", authenticateToken, (req, res) => {
-  res.send(`Hello, ${req.user.username}. This is a protected route.`);
-});
 
 module.exports = router;
