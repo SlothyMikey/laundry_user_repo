@@ -6,7 +6,7 @@ const generateAccessToken = (payload) => {
   if (!process.env.ACCESS_TOKEN_SECRET)
     throw new Error("ACCESS_TOKEN_SECRET missing");
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m", // Short-lived access token
+    expiresIn: "1m", // Short-lived access token
   });
 };
 
@@ -16,6 +16,22 @@ const generateRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: "7d", // Long-lived refresh token
   });
+};
+
+const verifyToken = (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    return res.status(200).json({ valid: true, user: decoded });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
 };
 
 const login = (req, res) => {
@@ -35,7 +51,7 @@ const login = (req, res) => {
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+    if (!ok) return res.status(401).json({ error: "Incorrect Password" });
 
     const payload = { user_id: user.user_id, username: user.username };
 
@@ -74,7 +90,7 @@ const login = (req, res) => {
 
 const refresh = (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-
+  console.log("Refresh Token:", refreshToken);
   if (!refreshToken) {
     return res.status(401).json({ error: "Refresh token not found" });
   }
@@ -129,7 +145,7 @@ const logout = (req, res) => {
   );
 };
 
-const updateUser = (req, res) => {
+const updateUserPassword = (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: "Username and password required." });
@@ -172,4 +188,4 @@ const updateUser = (req, res) => {
   );
 };
 
-module.exports = { login, refresh, logout, updateUser };
+module.exports = { verifyToken, login, refresh, logout, updateUserPassword };
