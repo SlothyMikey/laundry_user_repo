@@ -1,13 +1,15 @@
 import Logo from '@/components/ui/Logo';
 import LoginForm from '@/forms/LoginForm';
 import loginImage from '@/assets/loginImage.png';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { isAuthenticated } from '@/helpers/authUtils';
 
 export default function Login() {
   if (isAuthenticated()) {
     return <Navigate to="/dashboard" replace />;
   }
+  const location = useLocation();
+  const authError = (location.state as any)?.authError as string | undefined;
   return (
     <>
       <section className="min-h-screen flex bg-gray-100">
@@ -32,13 +34,18 @@ export default function Login() {
             <p className="text-lg font-thin">Laundry Management System</p>
           </div>
           {/* Login Form Section */}
+          {authError && (
+            <div className="max-w-md w-full mx-auto mt-8 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded">
+              {authError}
+            </div>
+          )}
           <LoginForm />
           {/* Footer */}
           <div className="text-center pt-2 border-t border-gray-100">
             <p className="text-xs text-gray-500">
               Professional Laundry Services
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 mt-1 mb-4">
               © 2025 Laver-Savon. All rights reserved.
             </p>
           </div>

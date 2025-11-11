@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [checking, setChecking] = useState(true);
   const [valid, setValid] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false; // Prevent state updates if component unmounts
@@ -22,9 +23,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         return;
       }
 
-      const isValid = await verifyToken();
+      const result = await verifyToken();
       if (!cancelled) {
-        setValid(isValid);
+        setValid(!!result.ok);
+        setAuthError(
+          result.ok ? null : (result.error ?? 'Authentication required'),
+        );
         setChecking(false);
       }
     }
@@ -38,11 +42,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }, []);
 
   if (checking) {
-    return;
+    return null; // render nothing (could show spinner)
   }
 
   if (!valid) {
-    return <Navigate to="/login" replace />;
+    // pass the auth error message to the login page so it can display a notice
+    return <Navigate to="/login" replace state={{ authError }} />;
   }
 
   return <>{children}</>;

@@ -45,9 +45,9 @@ export async function refreshAccessToken(): Promise<LoginResponse> {
   }
 }
 
-export async function verifyToken(): Promise<boolean> {
+export async function verifyToken(): Promise<LoginResponse> {
   const token = localStorage.getItem('token');
-  if (!token) return false;
+  if (!token) return { ok: false, error: 'No token found' };
 
   try {
     const resp = await fetch('/api/users/verify', {
@@ -62,16 +62,16 @@ export async function verifyToken(): Promise<boolean> {
       const refreshResult = await refreshAccessToken();
       if (!refreshResult.ok) {
         localStorage.removeItem('token');
-        return false;
+        return refreshResult;
       }
       console.log('Token refreshed successfully'); // Debug log
-      return true;
+      return refreshResult;
     }
 
-    return true;
+    return { ok: true, token };
   } catch (e) {
     localStorage.removeItem('token');
-    return false;
+    return { ok: false, error: 'Network error' };
   }
 }
 
