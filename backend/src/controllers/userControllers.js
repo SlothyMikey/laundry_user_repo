@@ -49,7 +49,7 @@ const googleLogin = async (req, res) => {
     const googleId = payload.sub;
 
     // Whitelist check - only these Gmail accounts can access
-    const allowedEmails = ["kerbydalan076@gmail.com"];
+    const allowedEmails = ["kerbydalan076@gmail.com", "dencell-jay.montederamos@cvsu.edu.ph"];
 
     if (!allowedEmails.includes(email)) {
       return res.status(403).json({
