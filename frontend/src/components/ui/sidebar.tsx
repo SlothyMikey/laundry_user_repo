@@ -11,7 +11,11 @@ import WarehouseOutlinedIcon from '@mui/icons-material/WarehouseOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 
-function Sidebar() {
+type sidebarProps = {
+    isHidden: boolean;
+}
+
+function Sidebar({ isHidden }: sidebarProps) {
 
     const sidebarButtons = [
         {
@@ -44,7 +48,7 @@ function Sidebar() {
     ];
 
     return (
-        <aside className="w-64 bg-black h-screen flex flex-col justify-between">
+        <aside className={`fixed left-0 top-0 z-30 w-64 bg-black h-screen flex flex-col justify-between transition-transform duration-300 ease-in-out ${isHidden ? "-translate-x-full" : "translate-x-0"}`}>
             {/* Logo and Name */}
             <div className='flex items-center p-5'>
                 <img src={Logo} alt="Logo" className='w-10 h-10 bg-white rounded' />
