@@ -4,13 +4,14 @@ import SpaceDashboardOutlinedIcon from '@mui/icons-material/SpaceDashboardOutlin
 interface headerProps {
     title: string;
     subtitle: string;
+    toggleSidebar: () => void;
 }
 
 function header(props: headerProps) {
     return (
         <>
         <div className="flex items-center p-4">
-            <IconButton sx={{ color: 'black' }}>
+            <IconButton sx={{ color: 'black' }} onClick={props.toggleSidebar}>
                 <SpaceDashboardOutlinedIcon />
             </IconButton>
             <div className="ml-3">
