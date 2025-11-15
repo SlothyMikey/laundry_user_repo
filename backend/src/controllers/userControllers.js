@@ -194,7 +194,6 @@ const logout = (req, res) => {
 
 module.exports = {
   verifyToken,
-  login,
   googleLogin,
   refresh,
   logout,
