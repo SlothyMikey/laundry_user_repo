@@ -12,89 +12,161 @@ import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 
 type sidebarProps = {
-    isHidden: boolean;
-}
+  isHidden: boolean;
+};
 
 function Sidebar({ isHidden }: sidebarProps) {
-
-    const sidebarButtons = [
+  const sidebarButtons = [
+    {
+      category: 'Orders & Bookings',
+      buttons: [
         {
-        category: 'Orders & Bookings',
-        buttons: [
-            {id: 1, label: "Booking Requests", to:"/", icon: AssignmentOutlinedIcon},
-            {id: 2, label: "Order Management", to:"/", icon: Inventory2OutlinedIcon},
-        ]
+          id: 1,
+          label: 'Booking Requests',
+          to: '/bookings',
+          icon: AssignmentOutlinedIcon,
         },
         {
-            category: "Overview",
-            buttons: [
-                {id: 3, label: "Sales & Revenue", to:"/", icon: AttachMoneyIcon},
-            ]
+          id: 2,
+          label: 'Order Management',
+          to: '/orders',
+          icon: Inventory2OutlinedIcon,
+        },
+      ],
+    },
+    {
+      category: 'Overview',
+      buttons: [
+        {
+          id: 3,
+          label: 'Sales & Revenue',
+          to: '/overview',
+          icon: AttachMoneyIcon,
+        },
+      ],
+    },
+    {
+      category: 'Management',
+      buttons: [
+        {
+          id: 4,
+          label: 'Services',
+          to: '/services',
+          icon: SettingsOutlinedIcon,
         },
         {
-            category: "Management",
-            buttons: [
-                {id: 4, label: "Services", to:"/", icon: SettingsOutlinedIcon},
-                {id: 5, label: "Customers", to:"/", icon: PeopleOutlineOutlinedIcon},
-                {id: 6, label: "Inventory", to:"/", icon: WarehouseOutlinedIcon},
-            ]
+          id: 5,
+          label: 'Customers',
+          to: '/customers',
+          icon: PeopleOutlineOutlinedIcon,
         },
         {
-            category: "Support",
-            buttons:[
-                {id: 7, label: "Help", to:"/", icon: HelpOutlineOutlinedIcon},
-            ]
+          id: 6,
+          label: 'Inventory',
+          to: '/inventory',
+          icon: WarehouseOutlinedIcon,
         },
-    ];
+      ],
+    },
+    {
+      category: 'Support',
+      buttons: [
+        { id: 7, label: 'Help', to: '/help', icon: HelpOutlineOutlinedIcon },
+      ],
+    },
+  ];
 
-    return (
-        <aside className={`fixed left-0 top-0 z-30 w-64 bg-black h-screen flex flex-col justify-between transition-transform duration-300 ease-in-out ${isHidden ? "-translate-x-full" : "translate-x-0"}`}>
-            {/* Logo and Name */}
-            <div className='flex items-center p-5'>
-                <img src={Logo} alt="Logo" className='w-10 h-10 bg-white rounded' />
-                <div className='ml-3'>
-                    <h1 className='text-light text-lg'>LaverSavon</h1>
-                    <h2 className='text-muted text-sm'>Silang Branch</h2>
-                </div>
-            </div>
+  return (
+    <aside
+      className={`fixed left-0 top-0 z-30 w-64 bg-black h-screen flex flex-col justify-between transition-transform duration-300 ease-in-out ${isHidden ? '-translate-x-full' : 'translate-x-0'}`}
+    >
+      {/* Logo and Name */}
+      <div className="flex items-center p-5">
+        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
+          <img
+            src={Logo}
+            alt="Logo"
+            className="w-10 h-10"
+            style={{
+              filter:
+                'invert(48%) sepia(79%) saturate(2476%) hue-rotate(200deg) brightness(95%) contrast(97%)',
+            }}
+          />
+        </div>
+        <div className="ml-3">
+          <h1 className="text-light text-lg">LaverSavon</h1>
+          <h2 className="text-muted text-sm">Silang Branch</h2>
+        </div>
+      </div>
 
-            <h1 className='text-muted text-xs ml-5 mb-3'>System Version 1.0.0</h1>
+      <h1 className="text-muted text-xs ml-5 mb-3">System Version 1.0.0</h1>
 
-            <Button variant="contained" sx={{textTransform: "none", ml:2, mb: 2,fontSize: '0.85rem', width: '85%', justifyContent: 'flex-start',}} startIcon={<AddCircleOutlineIcon />}
-            component={NavLink} to="/">
-            Create New Order
-            </Button>
+      <Button
+        variant="contained"
+        sx={{
+          textTransform: 'none',
+          ml: 2,
+          mb: 2,
+          fontSize: '0.85rem',
+          width: '85%',
+          justifyContent: 'flex-start',
+        }}
+        startIcon={<AddCircleOutlineIcon />}
+        component={NavLink}
+        to="/createOrder"
+      >
+        Create New Order
+      </Button>
 
-            {sidebarButtons.map((section) => (
-                <div key={section.category} className='mb-5'>
-                    <h1 className='ml-5 mb-1 text-light text-xs'>{section.category}</h1>
+      {sidebarButtons.map((section) => (
+        <div key={section.category} className="mb-5">
+          <h1 className="ml-5 mb-1 text-light text-xs">{section.category}</h1>
 
-                    {section.buttons.map((button) => {
-                        const Icon = button.icon;
-                        return (
-                            <Button
-                            key={button.id}
-                            variant='text'
-                            sx = {{textTransform: "none", color: "white", ml: 2, width: "85%", justifyContent: "flex-start"}}
-                            startIcon={<Icon />}
-                            component={NavLink}
-                            to={button.to}
-                            >
-                                {button.label}
-                            </Button>
-                        );
-                    })}
-                </div>
-            ))}
+          {section.buttons.map((button) => {
+            const Icon = button.icon;
+            return (
+              <Button
+                key={button.id}
+                variant="text"
+                sx={{
+                  textTransform: 'none',
+                  color: 'white',
+                  ml: 2,
+                  width: '85%',
+                  justifyContent: 'flex-start',
+                }}
+                startIcon={<Icon />}
+                component={NavLink}
+                to={button.to}
+              >
+                {button.label}
+              </Button>
+            );
+          })}
+        </div>
+      ))}
 
-            {/* Logout Button */}
-            <Button variant="contained" sx={{textTransform: "none", ml: 2, mb: 3, fontSize: '0.85rem', width: '85%', justifyContent: 'flex-start', backgroundColor: 'white', color: 'black'}} startIcon={<LogoutOutlinedIcon />}
-            component={NavLink} to="/">
-            Logout
-            </Button>
-
-        </aside>
-    )
+      {/* Logout Button */}
+      <Button
+        variant="contained"
+        sx={{
+          textTransform: 'none',
+          ml: 2,
+          mb: 3,
+          fontSize: '0.85rem',
+          width: '85%',
+          justifyContent: 'flex-start',
+          backgroundColor: 'white',
+          color: 'black',
+        }}
+        startIcon={<LogoutOutlinedIcon />}
+        component={NavLink}
+        to="/"
+      >
+        Logout
+      </Button>
+    </aside>
+  );
 }
 
 export default Sidebar;

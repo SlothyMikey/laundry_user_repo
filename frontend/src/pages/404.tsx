@@ -56,7 +56,7 @@ export default function NotFound() {
           <Button
             variant="contained"
             size="large"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/overview')}
           >
             Go to Dashboard
           </Button>

@@ -6,7 +6,7 @@ import { isAuthenticated } from '@/helpers/authUtils';
 
 export default function Login() {
   if (isAuthenticated()) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/overview" replace />;
   }
   const location = useLocation();
   const authError = (location.state as any)?.authError as string | undefined;
