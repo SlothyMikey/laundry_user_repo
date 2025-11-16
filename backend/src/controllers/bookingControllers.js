@@ -13,6 +13,7 @@ const addBooking = async (req, res) => {
     main_services,
     supplies,
     pickup_date,
+    payment_type,
     special_instruction,
   } = req.body;
 
@@ -25,11 +26,11 @@ const addBooking = async (req, res) => {
     });
 
     const insertBookingSql =
-      "INSERT INTO bookings (customer_id, pickup_date, special_instruction) VALUES (?, ?, ?)";
+      "INSERT INTO bookings (customer_id, pickup_date, payment_type, special_instruction) VALUES (?, ?, ?, ?)";
 
     db.query(
       insertBookingSql,
-      [customer.customer_id, pickup_date, special_instruction],
+      [customer.customer_id, pickup_date, payment_type, special_instruction],
       async (err, result) => {
         if (err) return res.status(500).json({ error: "Error adding booking" });
 
@@ -40,7 +41,6 @@ const addBooking = async (req, res) => {
           const serviceIds = promo ? [promo] : main_services;
           if (serviceIds && serviceIds.length > 0) {
             const serviceDetails = await getServiceDetailsByNames(serviceIds);
-            console.log("Service Details for Booking:", serviceDetails);
 
             if (serviceDetails.length > 0) {
               const insertServiceSql =
@@ -69,7 +69,6 @@ const addBooking = async (req, res) => {
               const supplyDetails = await getServiceDetailsByNames(
                 suppliesWithQty.map((s) => s.name)
               );
-              console.log("Supply Details:", supplyDetails);
 
               if (supplyDetails.length > 0) {
                 const insertSupplySql =
@@ -78,7 +77,6 @@ const addBooking = async (req, res) => {
                   const matchingSupply = suppliesWithQty.find(
                     (s) => s.name === service.service_name
                   );
-                  console.log(supplyDetails);
                   return [
                     bookingId,
                     service.service_id,

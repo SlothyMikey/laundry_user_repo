@@ -14,8 +14,11 @@ export default function Layout() {
       {/* Sidebar */}
       <Sidebar isHidden={isHidden} />
 
+      {/* Main content wrapper - margin adjusts based on sidebar visibility */}
       <main
-        className={`flex-1 flex flex-col overflow-auto transform transition-transform duration-300 ${isHidden ? 'translate-x-0' : 'translate-x-64'}`}
+        className={`flex-1 flex flex-col overflow-auto transition-all duration-300 ${
+          isHidden ? 'lg:ml-0' : 'lg:ml-64'
+        }`}
       >
         {/* Header */}
         <Header
@@ -24,9 +27,8 @@ export default function Layout() {
           toggleSidebar={() => setIsHidden(!isHidden)}
         />
 
-        {/* Main content goes here */}
+        {/* Main content */}
         <div className="flex-1 overflow-auto p-4 bg-gray-50">
-          {/* This is where child routes render */}
           <Outlet />
         </div>
       </main>
