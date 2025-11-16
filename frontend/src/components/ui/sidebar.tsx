@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 import Logo from '@/assets/logo.svg';
 import { NavLink } from 'react-router-dom';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloseIcon from '@mui/icons-material/Close';
 import { sidebarButtons } from '@/config/sidebarConfig';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import ConfirmationModal from '@/components/modals/confirmationModal';
@@ -11,9 +13,10 @@ import { logout } from '@/helpers/authUtils';
 
 type sidebarProps = {
   isHidden: boolean;
+  onClose?: () => void;
 };
 
-function Sidebar({ isHidden }: sidebarProps) {
+function Sidebar({ isHidden, onClose }: sidebarProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const navigate = useNavigate();
@@ -39,22 +42,39 @@ function Sidebar({ isHidden }: sidebarProps) {
       <aside
         className={`fixed left-0 top-0 z-30 w-64 bg-black h-screen flex flex-col justify-between transition-transform duration-300 ease-in-out ${isHidden ? '-translate-x-full' : 'translate-x-0'}`}
       >
-        {/* Logo and Name */}
-        <div className="flex items-center p-5">
-          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
-            <img
-              src={Logo}
-              alt="Logo"
-              className="w-10 h-10"
-              style={{
-                filter:
-                  'invert(48%) sepia(79%) saturate(2476%) hue-rotate(200deg) brightness(95%) contrast(97%)',
-              }}
-            />
-          </div>
-          <div className="ml-3">
-            <h1 className="text-light text-lg">LaverSavon</h1>
-            <h2 className="text-muted text-sm">Silang Branch</h2>
+        {/* Header with logo and close button */}
+        <div className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center flex-1">
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  className="w-10 h-10"
+                  style={{
+                    filter:
+                      'invert(48%) sepia(79%) saturate(2476%) hue-rotate(200deg) brightness(95%) contrast(97%)',
+                  }}
+                />
+              </div>
+              <div className="ml-3">
+                <h1 className="text-light text-lg">LaverSavon</h1>
+                <h2 className="text-muted text-sm">Silang Branch</h2>
+              </div>
+            </div>
+
+            {/* Close icon - visible only on mobile */}
+            {onClose && (
+              <div className="lg:hidden">
+                <IconButton
+                  onClick={onClose}
+                  sx={{ color: 'white' }}
+                  size="small"
+                >
+                  <CloseIcon />
+                </IconButton>
+              </div>
+            )}
           </div>
         </div>
 
