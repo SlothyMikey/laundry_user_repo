@@ -4,6 +4,8 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import ConfirmationModal from '@/components/modals/confirmationModal';
+import { useState } from 'react';
 
 type BookingStatus = 'pending' | 'accepted' | 'declined';
 
@@ -56,8 +58,21 @@ export default function BookingRequestCard({
   acceptingId,
   decliningId,
 }: BookingRequestCardProps) {
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+
   const isAccepting = acceptingId === booking.id;
   const isDeclining = decliningId === booking.id;
+
+  function handleAcceptConfirm() {
+    setShowAcceptModal(false);
+    onAccept(booking.id);
+  }
+
+  function handleDeclineConfirm() {
+    setShowDeclineModal(false);
+    onDecline(booking.id);
+  }
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -210,7 +225,7 @@ export default function BookingRequestCard({
           variant="contained"
           fullWidth
           disabled={isAccepting || isDeclining}
-          onClick={() => onAccept(booking.id)}
+          onClick={() => setShowAcceptModal(true)}
           sx={{ textTransform: 'none', py: 0.75 }}
         >
           {isAccepting ? 'Accepting…' : 'Accept'}
@@ -219,11 +234,34 @@ export default function BookingRequestCard({
           variant="outlined"
           fullWidth
           disabled={isAccepting || isDeclining}
-          onClick={() => onDecline(booking.id)}
+          onClick={() => setShowDeclineModal(true)}
           sx={{ textTransform: 'none', py: 0.75 }}
         >
           {isDeclining ? 'Declining…' : 'Decline'}
         </Button>
+        {/* Accept Confirmation Modal */}
+        <ConfirmationModal
+          open={showAcceptModal}
+          onClose={() => setShowAcceptModal(false)}
+          onConfirm={handleAcceptConfirm}
+          title="Accept Booking"
+          message={`Are you sure you want to accept the booking request from ${booking.customerName}? This will confirm the booking for ${booking.pickupDate}.`}
+          confirmText="Accept"
+          cancelText="Cancel"
+          loading={isAccepting}
+        />
+
+        {/* Decline Confirmation Modal */}
+        <ConfirmationModal
+          open={showDeclineModal}
+          onClose={() => setShowDeclineModal(false)}
+          onConfirm={handleDeclineConfirm}
+          title="Decline Booking"
+          message={`Are you sure you want to decline the booking request from ${booking.customerName}? This action cannot be undone.`}
+          confirmText="Decline"
+          cancelText="Cancel"
+          loading={isDeclining}
+        />
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ export default function Layout() {
         />
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto p-4 bg-gray-50">
+        <div className="flex-1 custom-scrollbar overflow-auto p-4 bg-gray-50">
           <Outlet />
         </div>
       </main>
