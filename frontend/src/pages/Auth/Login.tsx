@@ -6,7 +6,7 @@ import { isAuthenticated } from '@/helpers/authUtils';
 
 export default function Login() {
   if (isAuthenticated()) {
-    return <Navigate to="/overview" replace />;
+    return <Navigate to="/" replace />;
   }
   const location = useLocation();
   const authError = (location.state as any)?.authError as string | undefined;
@@ -15,7 +15,7 @@ export default function Login() {
       <section className="min-h-screen flex bg-gray-100">
         {/* Left Side - Image or Illustration */}
         <div
-          className="w-1/2 bg-gradient-to-br from-pink-100 to-blue-100"
+          className="w-1/2 hidden md:block bg-gradient-to-br from-pink-100 to-blue-100"
           style={{
             clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
             backgroundImage: `url(${loginImage})`,
@@ -24,7 +24,7 @@ export default function Login() {
           }}
         ></div>
         {/* Container for Form */}
-        <div className="w-1/2 flex flex-col justify-center items-center">
+        <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-6">
           {/* Top Section */}
           <div className="flex flex-col items-center gap-1">
             <Logo className="w-16 h-16 text-light mx-auto mt-4 p-2 bg-bg-highlight rounded-xl shadow-sm" />
@@ -35,7 +35,7 @@ export default function Login() {
           </div>
           {/* Login Form Section */}
           {authError && (
-            <div className="max-w-md w-full mx-auto mt-8 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded">
+            <div className="max-w-md w-full mx-auto mt-8 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded">
               {authError}
             </div>
           )}
