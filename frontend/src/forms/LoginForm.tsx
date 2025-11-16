@@ -36,7 +36,7 @@ export default function LoginForm() {
 
       const data = await resp.json();
       localStorage.setItem('token', data.accessToken);
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       setError('Authentication failed');
       setLoading(false);
@@ -48,7 +48,7 @@ export default function LoginForm() {
       {loading ? (
         <div className="loader mx-auto my-8"></div>
       ) : (
-        <div className="max-w-md mx-auto mt-8">
+        <div className="max-w-md w-full mt-8">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
             {/* Header */}
             <div className="text-center mb-8">
@@ -56,7 +56,7 @@ export default function LoginForm() {
                 Sign In
               </h2>
               <p className="text-sm text-gray-600">
-                Access your laundry management dashboard
+                Access your laundry management overview
               </p>
             </div>
 
@@ -68,7 +68,7 @@ export default function LoginForm() {
                 text="signin_with"
                 theme="outline"
                 size="large"
-                width="320"
+                width="270"
               />
             </div>
 
