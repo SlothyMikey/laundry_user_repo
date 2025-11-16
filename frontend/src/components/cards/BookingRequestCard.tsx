@@ -5,6 +5,7 @@ import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import ConfirmationModal from '@/components/modals/confirmationModal';
+import { declineBooking } from '@/helpers/BookingUtils';
 import { useState } from 'react';
 
 type BookingStatus = 'pending' | 'accepted' | 'declined';
