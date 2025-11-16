@@ -3,6 +3,7 @@ import type { PendingBookingsResponse } from '@/helpers/BookingTypes';
 export async function fetchPendingBookings(
   page = 1,
   limit = 20,
+  order: 'asc' | 'desc' = 'asc',
 ): Promise<PendingBookingsResponse> {
   const qs = new URLSearchParams({
     status: 'Pending', // no extra quotes

@@ -5,6 +5,7 @@ interface UseBookingsOptions {
   status: 'Pending' | 'Accepted' | 'Declined' | 'History';
   page?: number;
   limit?: number;
+  order?: 'asc' | 'desc';
 }
 
 interface ApiResponse {
@@ -18,6 +19,7 @@ export function useBookings({
   status,
   page = 1,
   limit = 20,
+  order = 'asc',
 }: UseBookingsOptions) {
   const [data, setData] = useState<BookingApi[]>([]);
   const [total, setTotal] = useState(0);
@@ -32,6 +34,7 @@ export function useBookings({
         status,
         page: String(page),
         limit: String(limit),
+        order,
       }).toString();
       const res = await fetch(`/api/bookings?${qs}`, {
         headers: { 'Content-Type': 'application/json' },
@@ -45,7 +48,7 @@ export function useBookings({
     } finally {
       setLoading(false);
     }
-  }, [status, page, limit]);
+  }, [status, page, limit, order]);
 
   useEffect(() => {
     fetchData();
@@ -56,6 +59,7 @@ export function useBookings({
     total,
     page,
     limit,
+    order,
     loading,
     error,
     refetch: fetchData,
