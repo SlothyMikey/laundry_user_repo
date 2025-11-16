@@ -114,4 +114,144 @@ const addBooking = async (req, res) => {
   }
 };
 
-module.exports = { addBooking };
+const getAllBookings = (req, res) => {
+  let {
+    status, // optional: only this status
+    notStatus, // optional: exclude this status (e.g. Pending)
+    from,
+    to,
+    page = 1,
+    limit = 20,
+    order = "DESC",
+  } = req.query;
+
+  const safeOrder = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
+  const offset = (Number(page) - 1) * Number(limit);
+
+  const whereParts = [];
+  const params = [];
+
+  // Normalize quotes/casing
+  const clean = (v) => v && v.replace(/^['"]+|['"]+$/g, "").trim();
+
+  status = clean(status);
+  notStatus = clean(notStatus);
+
+  if (status && status.toLowerCase() !== "all") {
+    whereParts.push("LOWER(b.status) = LOWER(?)");
+    params.push(status);
+  } else if (notStatus) {
+    whereParts.push("LOWER(b.status) <> LOWER(?)");
+    params.push(notStatus);
+  }
+
+  if (from) {
+    whereParts.push("DATE(b.pickup_date) >= ?");
+    params.push(from);
+  }
+  if (to) {
+    whereParts.push("DATE(b.pickup_date) <= ?");
+    params.push(to);
+  }
+
+  const whereClause = whereParts.length
+    ? "WHERE " + whereParts.join(" AND ")
+    : "";
+
+  const bookingsSql = `
+    SELECT 
+      b.booking_id,
+      c.name AS customer_name,
+      c.phone_number,
+      c.email,
+      c.address,
+      b.pickup_date,
+      b.payment_type,
+      b.special_instruction,
+      b.status
+    FROM bookings b
+    JOIN customers c ON b.customer_id = c.customer_id
+    ${whereClause}
+    ORDER BY b.booking_id ${safeOrder}
+    LIMIT ? OFFSET ?
+  `;
+
+  db.query(bookingsSql, [...params, Number(limit), offset], (err, bookings) => {
+    if (err)
+      return res.status(500).json({ error: "Database error (bookings)" });
+    if (!bookings.length) {
+      return res.status(200).json({ page: Number(page), total: 0, data: [] });
+    }
+
+    const bookingIds = bookings.map((b) => b.booking_id);
+    const placeholders = bookingIds.map(() => "?").join(", ");
+
+    const detailsSql = `
+      SELECT 
+        bd.booking_id,
+        bd.service_id,
+        bd.quantity,
+        bd.unit_price,
+        s.service_name,
+        s.service_type
+      FROM booking_details bd
+      JOIN services s ON s.service_id = bd.service_id
+      WHERE bd.booking_id IN (${placeholders})
+      ORDER BY bd.booking_id, bd.service_id
+    `;
+
+    db.query(detailsSql, bookingIds, (dErr, details) => {
+      if (dErr)
+        return res.status(500).json({ error: "Database error (details)" });
+
+      const byId = new Map();
+      for (const b of bookings) {
+        byId.set(b.booking_id, { ...b, details: [], total_amount: 0 });
+      }
+
+      for (const row of details) {
+        const lineTotal = Number(row.unit_price) * Number(row.quantity);
+        const bucket = byId.get(row.booking_id);
+        if (bucket) {
+          bucket.details.push({
+            service_id: row.service_id,
+            service_name: row.service_name,
+            service_type: row.service_type,
+            quantity: Number(row.quantity),
+            unit_price: Number(row.unit_price),
+            line_total: lineTotal,
+          });
+          bucket.total_amount += lineTotal;
+        }
+      }
+
+      return res.status(200).json({
+        page: Number(page),
+        limit: Number(limit),
+        total: bookings.length,
+        data: Array.from(byId.values()),
+      });
+    });
+  });
+};
+
+const declineBooking = (req, res) => {
+  const { bookingId } = req.params;
+
+  const declineSql =
+    "UPDATE bookings SET status = 'Declined' WHERE booking_id = ?";
+
+  db.query(declineSql, [bookingId], (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "Database error while declining booking" });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    return res.status(200).json({ message: "Booking declined successfully" });
+  });
+};
+
+module.exports = { addBooking, getAllBookings, declineBooking };
