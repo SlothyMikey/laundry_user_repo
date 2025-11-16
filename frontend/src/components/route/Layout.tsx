@@ -12,7 +12,7 @@ export default function Layout() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <Sidebar isHidden={isHidden} />
+      <Sidebar isHidden={isHidden} onClose={() => setIsHidden(true)} />
 
       {/* Main content wrapper - margin adjusts based on sidebar visibility */}
       <main
@@ -28,7 +28,7 @@ export default function Layout() {
         />
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto p-4 bg-gray-50">
+        <div className="flex-1 custom-scrollbar overflow-auto p-4 bg-gray-50">
           <Outlet />
         </div>
       </main>

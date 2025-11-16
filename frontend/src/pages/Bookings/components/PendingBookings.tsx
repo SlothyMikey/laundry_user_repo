@@ -1,15 +1,65 @@
+import { useState } from 'react';
 import { useBookings } from '@/hooks/useBookings';
 import BookingRequestCard from '@/components/cards/BookingRequestCard';
 import Button from '@mui/material/Button';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { declineBooking } from '@/helpers/BookingUtils';
+import { useToast } from '@/hooks/useToast';
+import Toast from '@/components/ui/Toast';
 
 export default function PendingBookings() {
   const { data, loading, error, refetch } = useBookings({
     status: 'Pending',
     page: 1,
     limit: 20,
-    order: 'asc',
   });
+
+  const { toast, showSuccess, showError, hideToast } = useToast();
+  const [acceptingId, setAcceptingId] = useState<number | null>(null);
+  const [decliningId, setDecliningId] = useState<number | null>(null);
+
+  // API call to accept booking
+  async function handleAccept(id: number) {
+    //   setAcceptingId(id);
+    //   try {
+    //     const result = await acceptBooking(id);
+    //     showSuccess(result.message || 'Booking accepted successfully!');
+    //     await refetch();
+    //   } catch (err) {
+    //     console.error('Accept booking error:', err);
+    //     showError(
+    //       err instanceof Error ? err.message : 'Failed to accept booking',
+    //     );
+    //   } finally {
+    //     setAcceptingId(null);
+    //   }
+  }
+
+  // API call to decline booking
+  async function handleDecline(id: number) {
+    setDecliningId(id);
+    try {
+      const result = await declineBooking(id);
+      showSuccess('Booking declined successfully!');
+      await refetch();
+    } catch (err) {
+      console.error('Decline booking error:', err);
+      showError(
+        err instanceof Error ? err.message : 'Failed to decline booking',
+      );
+    } finally {
+      setDecliningId(null);
+    }
+  }
+
+  async function handleRefresh() {
+    try {
+      await refetch();
+      showSuccess('Bookings refreshed!');
+    } catch (err) {
+      showError('Failed to refresh bookings');
+    }
+  }
 
   if (loading)
     return <div className="mt-4 text-sm text-gray-500">Loading…</div>;
@@ -31,17 +81,17 @@ export default function PendingBookings() {
           {data.length} pending booking{data.length !== 1 ? 's' : ''}
         </p>
         <Button
-          onClick={() => refetch()}
+          onClick={handleRefresh}
           disabled={loading}
+          startIcon={<RefreshIcon fontSize="small" />}
           sx={{
             color: 'gray',
             textTransform: 'none',
             fontSize: '0.875rem',
-            gap: 1,
           }}
           title="Refresh bookings"
         >
-          <RefreshIcon fontSize="small" /> Refresh
+          Refresh
         </Button>
       </div>
 
@@ -87,13 +137,23 @@ export default function PendingBookings() {
                   totalAmount: b.total_amount,
                   status: 'pending',
                 }}
-                onAccept={(id) => console.log('Accept', id)}
-                onDecline={(id) => console.log('Decline', id)}
+                onAccept={handleAccept}
+                onDecline={handleDecline}
+                acceptingId={acceptingId}
+                decliningId={decliningId}
               />
             );
           })}
         </div>
       )}
+
+      {/* Toast notifications */}
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        severity={toast.severity}
+        onClose={hideToast}
+      />
     </>
   );
 }
