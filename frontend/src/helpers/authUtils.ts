@@ -80,6 +80,18 @@ export function isAuthenticated(): boolean {
   return !!token;
 }
 
-export function logout() {
-  localStorage.removeItem('token');
+export async function logout(): Promise<boolean> {
+  try {
+    const resp = await fetch('/api/users/logout', {
+      method: 'POST',
+      credentials: 'include', // Send refresh token cookie
+    });
+
+    localStorage.removeItem('token');
+
+    return resp.ok;
+  } catch (e) {
+    localStorage.removeItem('token');
+    return false;
+  }
 }
