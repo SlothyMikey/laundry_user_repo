@@ -1,6 +1,10 @@
 const db = require("../config/db");
 const { findOrCreateCustomerByPhone } = require("../services/customerService");
 const { getServiceDetailsByNames } = require("../services/serviceServices");
+const {
+  generateOrderCode,
+  calculateBookingTotal,
+} = require("../services/bookingServices");
 
 const addBooking = async (req, res) => {
   const {
@@ -25,89 +29,105 @@ const addBooking = async (req, res) => {
       address,
     });
 
-    const insertBookingSql =
-      "INSERT INTO bookings (customer_id, pickup_date, payment_type, special_instruction) VALUES (?, ?, ?, ?)";
+    db.beginTransaction((txErr) => {
+      if (txErr) {
+        return res.status(500).json({ error: "Transaction start failed" });
+      }
 
-    db.query(
-      insertBookingSql,
-      [customer.customer_id, pickup_date, payment_type, special_instruction],
-      async (err, result) => {
-        if (err) return res.status(500).json({ error: "Error adding booking" });
+      const insertBookingSql =
+        "INSERT INTO bookings (customer_id, pickup_date, payment_type, special_instruction, status) VALUES (?, ?, ?, ?, 'Pending')";
 
-        const bookingId = result.insertId;
-
-        try {
-          // Insert services/promo
-          const serviceIds = promo ? [promo] : main_services;
-          if (serviceIds && serviceIds.length > 0) {
-            const serviceDetails = await getServiceDetailsByNames(serviceIds);
-
-            if (serviceDetails.length > 0) {
-              const insertServiceSql =
-                "INSERT INTO booking_details (booking_id, service_id, quantity, unit_price) VALUES ?";
-              const serviceValues = serviceDetails.map((service) => [
-                bookingId,
-                service.service_id,
-                load || 1,
-                service.price,
-              ]);
-
-              await new Promise((resolve, reject) => {
-                db.query(insertServiceSql, [serviceValues], (e2) => {
-                  if (e2) return reject(e2);
-                  resolve();
-                });
-              });
-            }
+      db.query(
+        insertBookingSql,
+        [customer.customer_id, pickup_date, payment_type, special_instruction],
+        async (err, result) => {
+          if (err) {
+            return db.rollback(() => {
+              res.status(500).json({ error: "Error adding booking" });
+            });
           }
 
-          // Insert supplies added by customer
-          if (supplies && supplies.length > 0) {
-            const suppliesWithQty = supplies.filter((s) => s.quantity > 0);
+          const bookingId = result.insertId;
 
-            if (suppliesWithQty.length > 0) {
-              const supplyDetails = await getServiceDetailsByNames(
-                suppliesWithQty.map((s) => s.name)
-              );
+          try {
+            // Insert services/promo
+            const serviceIds = promo ? [promo] : main_services;
+            if (serviceIds && serviceIds.length > 0) {
+              const serviceDetails = await getServiceDetailsByNames(serviceIds);
 
-              if (supplyDetails.length > 0) {
-                const insertSupplySql =
+              if (serviceDetails.length > 0) {
+                const insertServiceSql =
                   "INSERT INTO booking_details (booking_id, service_id, quantity, unit_price) VALUES ?";
-                const supplyValues = supplyDetails.map((service) => {
-                  const matchingSupply = suppliesWithQty.find(
-                    (s) => s.name === service.service_name
-                  );
-                  return [
-                    bookingId,
-                    service.service_id,
-                    matchingSupply?.quantity || 1,
-                    service.price,
-                  ];
-                });
+                const serviceValues = serviceDetails.map((service) => [
+                  bookingId,
+                  service.service_id,
+                  load || 1,
+                  service.price,
+                ]);
 
                 await new Promise((resolve, reject) => {
-                  db.query(insertSupplySql, [supplyValues], (e3) => {
-                    if (e3) return reject(e3);
+                  db.query(insertServiceSql, [serviceValues], (e2) => {
+                    if (e2) return reject(e2);
                     resolve();
                   });
                 });
               }
             }
-          }
 
-          // Send response ONLY after all inserts complete
-          return res.status(201).json({
-            message: "Booking added successfully",
-            bookingId,
-          });
-        } catch (insertErr) {
-          console.error("Insert error:", insertErr);
-          return res
-            .status(500)
-            .json({ error: "Error adding booking details" });
+            // Insert supplies added by customer
+            if (supplies && supplies.length > 0) {
+              const suppliesWithQty = supplies.filter((s) => s.quantity > 0);
+
+              if (suppliesWithQty.length > 0) {
+                const supplyDetails = await getServiceDetailsByNames(
+                  suppliesWithQty.map((s) => s.name)
+                );
+
+                if (supplyDetails.length > 0) {
+                  const insertSupplySql =
+                    "INSERT INTO booking_details (booking_id, service_id, quantity, unit_price) VALUES ?";
+                  const supplyValues = supplyDetails.map((service) => {
+                    const matchingSupply = suppliesWithQty.find(
+                      (s) => s.name === service.service_name
+                    );
+                    return [
+                      bookingId,
+                      service.service_id,
+                      matchingSupply?.quantity || 1,
+                      service.price,
+                    ];
+                  });
+
+                  await new Promise((resolve, reject) => {
+                    db.query(insertSupplySql, [supplyValues], (e3) => {
+                      if (e3) return reject(e3);
+                      resolve();
+                    });
+                  });
+                }
+              }
+            }
+
+            // Commit transaction
+            db.commit((commitErr) => {
+              if (commitErr) {
+                return db.rollback(() => {
+                  res.status(500).json({ error: "Transaction commit failed" });
+                });
+              }
+              return res.status(201).json({
+                message: "Booking added successfully",
+                bookingId,
+              });
+            });
+          } catch (insertErr) {
+            return db.rollback(() => {
+              res.status(500).json({ error: "Error adding booking details" });
+            });
+          }
         }
-      }
-    );
+      );
+    });
   } catch (e) {
     console.error("Booking error:", e);
     return res.status(500).json({ error: "Server error: " + e.message });
@@ -254,4 +274,109 @@ const declineBooking = (req, res) => {
   });
 };
 
-module.exports = { addBooking, getAllBookings, declineBooking };
+const acceptBooking = async (req, res) => {
+  const { bookingId } = req.params;
+
+  try {
+    const orderCode = await generateOrderCode();
+    const totalAmount = await calculateBookingTotal(bookingId);
+
+    db.beginTransaction((txErr) => {
+      if (txErr) {
+        return res.status(500).json({ error: "Transaction start failed" });
+      }
+
+      const acceptSql =
+        "UPDATE bookings SET status = 'Accepted' WHERE booking_id = ?";
+      db.query(acceptSql, [bookingId], (err, result) => {
+        if (err) {
+          return db.rollback(() => {
+            res.status(500).json({ error: "Error accepting booking" });
+          });
+        }
+        if (result.affectedRows === 0) {
+          return db.rollback(() => {
+            res.status(404).json({ error: "Booking not found" });
+          });
+        }
+
+        db.query(
+          "SELECT order_id FROM orders WHERE booking_id = ? LIMIT 1",
+          [bookingId],
+          (checkErr, existing) => {
+            if (checkErr) {
+              return db.rollback(() => {
+                res
+                  .status(500)
+                  .json({ error: "Error checking existing order" });
+              });
+            }
+            if (existing.length > 0) {
+              return db.rollback(() => {
+                res
+                  .status(409)
+                  .json({ error: "Order already exists for this booking" });
+              });
+            }
+
+            const createOrderSql = `
+              INSERT INTO orders (order_code, booking_id, customer_id, total_amount, source, created_at)
+              SELECT ?, b.booking_id, b.customer_id, ?, 'Booking', NOW()
+              FROM bookings b
+              WHERE b.booking_id = ?
+            `;
+            db.query(
+              createOrderSql,
+              [orderCode, totalAmount, bookingId],
+              (orderErr, orderResult) => {
+                if (orderErr) {
+                  return db.rollback(() => {
+                    res.status(500).json({ error: "Error creating order" });
+                  });
+                }
+
+                const orderId = orderResult.insertId;
+
+                const copyDetailsSql = `
+                  INSERT INTO order_details (order_id, service_id, quantity, unit_price)
+                  SELECT ?, bd.service_id, bd.quantity, bd.unit_price
+                  FROM booking_details bd
+                  WHERE bd.booking_id = ?
+                `;
+                db.query(copyDetailsSql, [orderId, bookingId], (detailsErr) => {
+                  if (detailsErr) {
+                    return db.rollback(() => {
+                      res
+                        .status(500)
+                        .json({ error: "Error copying order details" });
+                    });
+                  }
+
+                  db.commit((commitErr) => {
+                    if (commitErr) {
+                      return db.rollback(() => {
+                        res
+                          .status(500)
+                          .json({ error: "Transaction commit failed" });
+                      });
+                    }
+                    return res.status(200).json({
+                      message: "Booking accepted and order created",
+                      orderId,
+                      orderCode,
+                    });
+                  });
+                });
+              }
+            );
+          }
+        );
+      });
+    });
+  } catch (e) {
+    console.error("Accept booking error:", e);
+    return res.status(500).json({ error: "Server error: " + e.message });
+  }
+};
+
+module.exports = { addBooking, getAllBookings, declineBooking, acceptBooking };
