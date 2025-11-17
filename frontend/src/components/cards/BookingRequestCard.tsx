@@ -5,52 +5,11 @@ import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import ConfirmationModal from '@/components/modals/confirmationModal';
-import { declineBooking } from '@/helpers/BookingUtils';
+import {
+  type BookingRequestCardProps,
+  statusStyle,
+} from '@/helpers/BookingTypes';
 import { useState } from 'react';
-
-type BookingStatus = 'pending' | 'accepted' | 'declined';
-
-interface SupplyItem {
-  name: string;
-  quantity: number;
-}
-
-interface ServiceLine {
-  name: string;
-  quantity: number;
-  lineTotal?: number;
-}
-
-export interface BookingRequestCardData {
-  id: number;
-  customerName: string;
-  requestDate: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  pickupDate: string;
-  bundleName?: string | null;
-  services?: ServiceLine[];
-  suppliesNeeded?: { name: string; quantity: number }[];
-  paymentType?: string;
-  specialInstructions?: string;
-  totalAmount?: number;
-  status: 'pending' | 'accepted' | 'declined';
-}
-
-interface BookingRequestCardProps {
-  booking: BookingRequestCardData;
-  onAccept: (id: number) => void;
-  onDecline: (id: number) => void;
-  acceptingId?: number | null; // optional loading control
-  decliningId?: number | null; // optional loading control
-}
-
-const statusStyle: Record<BookingStatus, string> = {
-  pending: 'text-blue-700 bg-blue-50',
-  accepted: 'text-green-700 bg-green-50',
-  declined: 'text-red-700 bg-red-50',
-};
 
 export default function BookingRequestCard({
   booking,
@@ -149,9 +108,14 @@ export default function BookingRequestCard({
             <p className="text-[12px] font-medium text-gray-600 mb-1">
               Package:
             </p>
-            <p className="ml-2 text-sm font-medium text-gray-800">
-              {booking.bundleName}
-            </p>
+            <div className="w-full flex justify-between items-center ml-2">
+              <p className="text-sm font-medium text-gray-800">
+                {booking.bundleName}
+              </p>
+              <p>
+                {booking.loadSize} load{booking.loadSize !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
         </>
       )}
@@ -162,9 +126,14 @@ export default function BookingRequestCard({
             <p className="text-[12px] font-medium text-gray-600 mb-1">
               Services:
             </p>
-            <p className="ml-2 text-sm font-medium text-gray-800">
-              {booking.services.map((s) => s.name).join(' ')}
-            </p>
+            <div className="w-full flex justify-between items-center ml-2">
+              <p className="text-sm font-medium text-gray-800">
+                {booking.services.map((s) => s.name).join(' ')}
+              </p>
+              <p>
+                {booking.loadSize} load{booking.loadSize !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
         </>
       )}

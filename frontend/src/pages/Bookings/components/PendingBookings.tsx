@@ -3,7 +3,7 @@ import { useBookings } from '@/hooks/useBookings';
 import BookingRequestCard from '@/components/cards/BookingRequestCard';
 import Button from '@mui/material/Button';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { declineBooking } from '@/helpers/BookingUtils';
+import { declineBooking, acceptBooking } from '@/helpers/BookingUtils';
 import { useToast } from '@/hooks/useToast';
 import Toast from '@/components/ui/Toast';
 
@@ -20,19 +20,19 @@ export default function PendingBookings() {
 
   // API call to accept booking
   async function handleAccept(id: number) {
-    //   setAcceptingId(id);
-    //   try {
-    //     const result = await acceptBooking(id);
-    //     showSuccess(result.message || 'Booking accepted successfully!');
-    //     await refetch();
-    //   } catch (err) {
-    //     console.error('Accept booking error:', err);
-    //     showError(
-    //       err instanceof Error ? err.message : 'Failed to accept booking',
-    //     );
-    //   } finally {
-    //     setAcceptingId(null);
-    //   }
+    setAcceptingId(id);
+    try {
+      const result = await acceptBooking(id);
+      showSuccess(result.message || 'Booking accepted successfully!');
+      await refetch();
+    } catch (err) {
+      console.error('Accept booking error:', err);
+      showError(
+        err instanceof Error ? err.message : `Failed to accept booking ${err}`,
+      );
+    } finally {
+      setAcceptingId(null);
+    }
   }
 
   // API call to decline booking
@@ -122,6 +122,10 @@ export default function PendingBookings() {
                   email: b.email,
                   address: b.address,
                   pickupDate: new Date(b.pickup_date).toLocaleDateString(),
+                  loadSize: bundle
+                    ? bundle?.quantity
+                    : mainServices[0]?.quantity || 0,
+
                   bundleName: bundle?.service_name || null,
                   services: mainServices.map((s) => ({
                     name: s.service_name,
