@@ -136,10 +136,11 @@ const addBooking = async (req, res) => {
 
 const getAllBookings = (req, res) => {
   let {
-    status, // optional: only this status
-    notStatus, // optional: exclude this status (e.g. Pending)
+    status,
+    notStatus,
     from,
     to,
+    search, // NEW: search by customer name, email, phone
     page = 1,
     limit = 20,
     order = "DESC",
@@ -151,12 +152,12 @@ const getAllBookings = (req, res) => {
   const whereParts = [];
   const params = [];
 
-  // Normalize quotes/casing
   const clean = (v) => v && v.replace(/^['"]+|['"]+$/g, "").trim();
 
   status = clean(status);
   notStatus = clean(notStatus);
 
+  // Status filtering
   if (status && status.toLowerCase() !== "all") {
     whereParts.push("LOWER(b.status) = LOWER(?)");
     params.push(status);
@@ -165,6 +166,7 @@ const getAllBookings = (req, res) => {
     params.push(notStatus);
   }
 
+  // Date range
   if (from) {
     whereParts.push("DATE(b.pickup_date) >= ?");
     params.push(from);
@@ -174,84 +176,138 @@ const getAllBookings = (req, res) => {
     params.push(to);
   }
 
+  // NEW: Search across customer fields
+  if (search) {
+    whereParts.push(
+      "(c.name LIKE ? OR c.email LIKE ? OR c.phone_number LIKE ?)"
+    );
+    const searchPattern = `%${search}%`;
+    params.push(searchPattern, searchPattern, searchPattern);
+  }
+
   const whereClause = whereParts.length
     ? "WHERE " + whereParts.join(" AND ")
     : "";
 
-  const bookingsSql = `
-    SELECT 
-      b.booking_id,
-      c.name AS customer_name,
-      c.phone_number,
-      c.email,
-      c.address,
-      b.pickup_date,
-      b.payment_type,
-      b.special_instruction,
-      b.status
+  // FIXED: Get actual total count
+  const countSql = `
+    SELECT COUNT(*) as total
     FROM bookings b
     JOIN customers c ON b.customer_id = c.customer_id
     ${whereClause}
-    ORDER BY b.booking_id ${safeOrder}
-    LIMIT ? OFFSET ?
   `;
 
-  db.query(bookingsSql, [...params, Number(limit), offset], (err, bookings) => {
-    if (err)
-      return res.status(500).json({ error: "Database error (bookings)" });
-    if (!bookings.length) {
-      return res.status(200).json({ page: Number(page), total: 0, data: [] });
+  db.query(countSql, params, (countErr, countResult) => {
+    if (countErr) {
+      return res.status(500).json({ error: "Database error (count)" });
     }
 
-    const bookingIds = bookings.map((b) => b.booking_id);
-    const placeholders = bookingIds.map(() => "?").join(", ");
+    const totalRecords = countResult[0].total;
 
-    const detailsSql = `
-      SELECT 
-        bd.booking_id,
-        bd.service_id,
-        bd.quantity,
-        bd.unit_price,
-        s.service_name,
-        s.service_type
-      FROM booking_details bd
-      JOIN services s ON s.service_id = bd.service_id
-      WHERE bd.booking_id IN (${placeholders})
-      ORDER BY bd.booking_id, bd.service_id
-    `;
-
-    db.query(detailsSql, bookingIds, (dErr, details) => {
-      if (dErr)
-        return res.status(500).json({ error: "Database error (details)" });
-
-      const byId = new Map();
-      for (const b of bookings) {
-        byId.set(b.booking_id, { ...b, details: [], total_amount: 0 });
-      }
-
-      for (const row of details) {
-        const lineTotal = Number(row.unit_price) * Number(row.quantity);
-        const bucket = byId.get(row.booking_id);
-        if (bucket) {
-          bucket.details.push({
-            service_id: row.service_id,
-            service_name: row.service_name,
-            service_type: row.service_type,
-            quantity: Number(row.quantity),
-            unit_price: Number(row.unit_price),
-            line_total: lineTotal,
-          });
-          bucket.total_amount += lineTotal;
-        }
-      }
-
+    // Early return if no results
+    if (totalRecords === 0) {
       return res.status(200).json({
         page: Number(page),
         limit: Number(limit),
-        total: bookings.length,
-        data: Array.from(byId.values()),
+        total: 0,
+        data: [],
       });
-    });
+    }
+
+    // OPTIMIZED: Single JOIN query with aggregation
+    const bookingsSql = `
+      SELECT 
+        b.booking_id,
+        c.name AS customer_name,
+        c.phone_number,
+        c.email,
+        c.address,
+        b.pickup_date,
+        b.payment_type,
+        b.special_instruction,
+        b.status,
+        COALESCE(SUM(bd.quantity * bd.unit_price), 0) as total_amount
+      FROM bookings b
+      JOIN customers c ON b.customer_id = c.customer_id
+      LEFT JOIN booking_details bd ON b.booking_id = bd.booking_id
+      ${whereClause}
+      GROUP BY b.booking_id
+      ORDER BY b.booking_id ${safeOrder}
+      LIMIT ? OFFSET ?
+    `;
+
+    db.query(
+      bookingsSql,
+      [...params, Number(limit), offset],
+      (err, bookings) => {
+        if (err) {
+          return res.status(500).json({ error: "Database error (bookings)" });
+        }
+
+        if (!bookings.length) {
+          return res.status(200).json({
+            page: Number(page),
+            limit: Number(limit),
+            total: totalRecords,
+            data: [],
+          });
+        }
+
+        const bookingIds = bookings.map((b) => b.booking_id);
+        const placeholders = bookingIds.map(() => "?").join(", ");
+
+        const detailsSql = `
+          SELECT 
+            bd.booking_id,
+            bd.service_id,
+            bd.quantity,
+            bd.unit_price,
+            s.service_name,
+            s.service_type
+          FROM booking_details bd
+          JOIN services s ON s.service_id = bd.service_id
+          WHERE bd.booking_id IN (${placeholders})
+          ORDER BY bd.booking_id, bd.service_id
+        `;
+
+        db.query(detailsSql, bookingIds, (dErr, details) => {
+          if (dErr) {
+            return res.status(500).json({ error: "Database error (details)" });
+          }
+
+          const byId = new Map();
+          for (const b of bookings) {
+            byId.set(b.booking_id, {
+              ...b,
+              details: [],
+              total_amount: Number(b.total_amount), // Use pre-calculated total
+            });
+          }
+
+          for (const row of details) {
+            const lineTotal = Number(row.unit_price) * Number(row.quantity);
+            const bucket = byId.get(row.booking_id);
+            if (bucket) {
+              bucket.details.push({
+                service_id: row.service_id,
+                service_name: row.service_name,
+                service_type: row.service_type,
+                quantity: Number(row.quantity),
+                unit_price: Number(row.unit_price),
+                line_total: lineTotal,
+              });
+            }
+          }
+
+          return res.status(200).json({
+            page: Number(page),
+            limit: Number(limit),
+            total: totalRecords, // FIXED: Real total
+            data: Array.from(byId.values()),
+          });
+        });
+      }
+    );
   });
 };
 
