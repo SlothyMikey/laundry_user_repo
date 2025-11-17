@@ -31,3 +31,43 @@ export interface PendingBookingsResponse {
 export type PendingBookingsProps =
   | { response: PendingBookingsResponse; bookings?: never }
   | { bookings: BookingApi[]; response?: never };
+
+export type BookingStatus = 'pending' | 'accepted' | 'declined';
+
+export interface ServiceLine {
+  name: string;
+  quantity: number;
+  lineTotal?: number;
+}
+
+export interface BookingRequestCardData {
+  id: number;
+  customerName: string;
+  requestDate: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  pickupDate: string;
+  loadSize: number;
+  bundleName?: string | null;
+  services?: ServiceLine[];
+  suppliesNeeded?: { name: string; quantity: number }[];
+  paymentType?: string;
+  specialInstructions?: string;
+  totalAmount?: number;
+  status: BookingStatus;
+}
+
+export interface BookingRequestCardProps {
+  booking: BookingRequestCardData;
+  onAccept: (id: number) => void;
+  onDecline: (id: number) => void;
+  acceptingId?: number | null;
+  decliningId?: number | null;
+}
+
+export const statusStyle: Record<BookingStatus, string> = {
+  pending: 'bg-blue-500',
+  accepted: 'bg-green-500',
+  declined: 'bg-red-500',
+};
