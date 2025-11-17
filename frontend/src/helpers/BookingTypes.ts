@@ -67,7 +67,7 @@ export interface BookingRequestCardProps {
 }
 
 export const statusStyle: Record<BookingStatus, string> = {
-  pending: 'text-blue-700 bg-blue-50',
-  accepted: 'text-green-700 bg-green-50',
-  declined: 'text-red-700 bg-red-50',
+  pending: 'bg-blue-500',
+  accepted: 'bg-green-500',
+  declined: 'bg-red-500',
 };

@@ -39,7 +39,7 @@ export default function PendingBookings() {
   async function handleDecline(id: number) {
     setDecliningId(id);
     try {
-      const result = await declineBooking(id);
+      await declineBooking(id);
       showSuccess('Booking declined successfully!');
       await refetch();
     } catch (err) {
@@ -85,9 +85,7 @@ export default function PendingBookings() {
           disabled={loading}
           startIcon={<RefreshIcon fontSize="small" />}
           sx={{
-            color: 'gray',
             textTransform: 'none',
-            fontSize: '0.875rem',
           }}
           title="Refresh bookings"
         >
@@ -97,7 +95,9 @@ export default function PendingBookings() {
 
       {/* Cards grid */}
       {!data.length ? (
-        <div className="text-sm text-gray-500">No pending bookings.</div>
+        <div className="text-sm text-gray-500 flex justify-center">
+          No pending bookings.
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.map((b) => {

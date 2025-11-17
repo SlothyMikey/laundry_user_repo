@@ -49,7 +49,7 @@ export default function BookingRequestCard({
         </div>
 
         <span
-          className={`px-2 py-1 rounded text-[11px] font-medium ${statusStyle[booking.status]}`}
+          className={`px-2 py-1 rounded text-[11px] font-medium text-white ${statusStyle[booking.status]}`}
         >
           {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
         </span>

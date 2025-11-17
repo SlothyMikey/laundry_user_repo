@@ -21,7 +21,7 @@ export default function Bookings() {
   return (
     <>
       <h1 className="text-lg font-semibold">Bookings Management</h1>
-      <p className="text-xs text-muted mb-6">
+      <p className="text-sm text-muted mb-6">
         Review and manage customer booking requests
       </p>
 
@@ -29,10 +29,10 @@ export default function Bookings() {
         tabs={tabs}
         value={active}
         onChange={setActive}
-        className="mb-6"
+        className="mb-4"
       />
 
-      <div className="mt-4 text-sm">
+      <div className="text-sm">
         {active === 'pending' && <PendingBookings />}
         {active === 'history' && <BookingHistory />}
       </div>
