@@ -1,10 +1,8 @@
 const db = require("../config/db");
 const { findOrCreateCustomerByPhone } = require("../services/customerService");
 const { getServiceDetailsByNames } = require("../services/serviceServices");
-const {
-  generateOrderCode,
-  calculateBookingTotal,
-} = require("../services/bookingServices");
+const { calculateBookingTotal } = require("../services/bookingServices");
+const { generateOrderCode } = require("../services/bookingServices");
 
 const addBooking = async (req, res) => {
   const {
@@ -129,7 +127,6 @@ const addBooking = async (req, res) => {
       );
     });
   } catch (e) {
-    console.error("Booking error:", e);
     return res.status(500).json({ error: "Server error: " + e.message });
   }
 };
@@ -430,7 +427,6 @@ const acceptBooking = async (req, res) => {
       });
     });
   } catch (e) {
-    console.error("Accept booking error:", e);
     return res.status(500).json({ error: "Server error: " + e.message });
   }
 };

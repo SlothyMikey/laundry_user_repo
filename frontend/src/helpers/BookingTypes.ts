@@ -71,3 +71,11 @@ export const statusStyle: Record<BookingStatus, string> = {
   accepted: 'bg-green-500',
   declined: 'bg-red-500',
 };
+
+export interface ApiServiceResponse {
+  service_name: string;
+  price: string;
+  unit_type: 'per_load' | 'per_item' | 'variable_price';
+  service_type: 'main_service' | 'add_on_supply' | 'bundle_package';
+  description?: string;
+}
