@@ -16,6 +16,9 @@ app.use("/api/services", serviceRoutes);
 const bookingRoutes = require("./routers/bookingRoutes");
 app.use("/api/bookings", bookingRoutes);
 
+const orderRoutes = require("./routers/orderRoutes");
+app.use("/api/orders", orderRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
