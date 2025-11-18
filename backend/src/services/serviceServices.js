@@ -15,6 +15,23 @@ const getServiceDetailsByNames = (serviceNames) => {
   });
 };
 
+const getServiceDetailsByIds = (serviceIds) => {
+  return new Promise((resolve, reject) => {
+    if (!serviceIds || serviceIds.length === 0) {
+      return resolve([]);
+    }
+
+    const placeholders = serviceIds.map(() => "?").join(", ");
+    const query = `SELECT service_id, service_name, price, unit_type, service_type, description FROM services WHERE service_id IN (${placeholders}) AND is_active = 1`;
+
+    db.query(query, serviceIds, (err, results) => {
+      if (err) return reject(err);
+      resolve(results || []);
+    });
+  });
+};
+
 module.exports = {
   getServiceDetailsByNames,
+  getServiceDetailsByIds,
 };
