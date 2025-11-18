@@ -1,3 +1,5 @@
+const db = require("../config/db");
+
 /**
  * Generates unique order code: ORD{MM}{DD}{YY}{###}
  * Example: ORD111725001
@@ -29,3 +31,5 @@ function generateOrderCode() {
     });
   });
 }
+
+module.exports = { generateOrderCode };

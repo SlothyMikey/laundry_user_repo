@@ -20,4 +20,4 @@ function calculateBookingTotal(bookingId) {
   });
 }
 
-module.exports = { generateOrderCode, calculateBookingTotal };
+module.exports = { calculateBookingTotal };

@@ -1,6 +1,6 @@
 const db = require("../config/db");
 const { getServiceDetailsByNames } = require("../services/serviceServices");
-const { generateOrderCode } = require("../services/bookingServices");
+const { generateOrderCode } = require("../services/orderServices");
 
 const createWalkInOrder = async (req, res) => {
   const {

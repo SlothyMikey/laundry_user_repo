@@ -2,7 +2,7 @@ const db = require("../config/db");
 const { findOrCreateCustomerByPhone } = require("../services/customerService");
 const { getServiceDetailsByNames } = require("../services/serviceServices");
 const { calculateBookingTotal } = require("../services/bookingServices");
-const { generateOrderCode } = require("../services/bookingServices");
+const { generateOrderCode } = require("../services/orderServices");
 
 const addBooking = async (req, res) => {
   const {
