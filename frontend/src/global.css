@@ -54,6 +54,11 @@
     @apply flex justify-center;
   }
 
+  /*For Cards Style*/
+  .card-container {
+    @apply border rounded-md p-6 border-gray-300 bg-white shadow-sm;
+  }
+
   /* From Uiverse.io by Shoh2008 */
   .loader {
     width: 120px;
@@ -106,20 +111,21 @@
 
   /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.3);
   }
 
   /* Firefox */

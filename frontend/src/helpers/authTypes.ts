@@ -3,8 +3,3 @@ export type LoginResponse = {
   token?: string;
   error?: string;
 };
-
-export type TokenResponse = {
-  ok: boolean;
-  error?: string;
-};

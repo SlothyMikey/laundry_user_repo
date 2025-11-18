@@ -112,7 +112,7 @@ export default function BookingHistory() {
 
   return (
     <div className="">
-      <div className="border rounded-md p-6 border-gray-300 bg-white shadow-sm">
+      <div className="card-container">
         <div className="md:flex md:justify-between items-center mb-6">
           <div>
             <h1 className="font-semibold text-lg">Booking History</h1>
