@@ -38,7 +38,7 @@ export default function ViewModal({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent className="custom-scrollbar" sx={{ p: 3 }}>
+      <DialogContent className="custom-scrollbar" sx={{ p: 3, paddingTop: '20px !important', paddingBottom: '20px !important' }}>
         {children}
       </DialogContent>
       {actions && (

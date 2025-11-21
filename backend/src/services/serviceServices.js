@@ -6,7 +6,6 @@ const getServiceDetailsByNames = (serviceNames) => {
       return resolve([]);
     }
     const placeholders = serviceNames.map(() => "?").join(", ");
-    console.log("Service Names:", serviceNames);
     const query = `SELECT service_id, service_name, price, unit_type, service_type, description FROM services WHERE service_name IN (${placeholders}) AND is_active = 1`;
     db.query(query, serviceNames, (err, results) => {
       if (err) return reject(err);

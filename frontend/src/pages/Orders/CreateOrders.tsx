@@ -26,7 +26,25 @@ export default function CreateOrder() {
   const [numberOfLoads, setNumberOfLoads] = useState(1);
   const [paymentType, setPaymentType] = useState('Cash');
   const [paymentStatus, setPaymentStatus] = useState('Unpaid');
-  const { services, loadServices, loading, error } = useServices();
+  const [paidAmount, setPaidAmount] = useState('');
+  const handlePaidAmountChange = (value: string) => {
+    if (value === '') {
+      setPaidAmount('');
+      return;
+    }
+
+    // Allow only digits and a single decimal point; strip any minus signs or letters
+    const sanitized = value.replace(/[^0-9.]/g, '');
+    // Prevent multiple decimals
+    const normalizedParts = sanitized.split('.');
+    const normalized =
+      normalizedParts.length <= 2
+        ? sanitized
+        : `${normalizedParts.shift()}.${normalizedParts.join('')}`;
+
+    setPaidAmount(normalized);
+  };
+  const { services, loadServices } = useServices();
   const [supplies, setSupplies] = useState<Record<string, number>>({});
   const { toast, showSuccess, showError, hideToast } = useToast();
 
@@ -151,8 +169,14 @@ export default function CreateOrder() {
       : [],
     supplies: Object.entries(supplies)
       .filter(([, qty]) => qty > 0)
-      .map(([service_name, quantity]) => ({ service_name, quantity })),
+      .map(([name, quantity]) => ({ name, quantity })),
     total_amount: total,
+    paid_amount:
+      paymentStatus === 'Partial'
+        ? Number(paidAmount) || 0
+        : paymentStatus === 'Paid'
+          ? total
+          : 0,
   });
 
   const handleCreateOrder = async () => {
@@ -160,6 +184,17 @@ export default function CreateOrder() {
     if (!payload.guest_name) {
       showError('Customer name is required');
       return;
+    }
+    if (paymentStatus === 'Partial') {
+      const numericPaid = Number(paidAmount);
+      if (!numericPaid || numericPaid <= 0) {
+        showError('Enter the amount received for partial payment');
+        return;
+      }
+      if (numericPaid >= total) {
+        showError('Partial payment must be less than the total amount');
+        return;
+      }
     }
     if (
       payload.guest_phone_number &&
@@ -196,6 +231,7 @@ export default function CreateOrder() {
     setSupplies(clearedSup);
     setPaymentType('Cash');
     setPaymentStatus('Unpaid');
+    setPaidAmount('');
   };
 
   return (
@@ -255,11 +291,6 @@ export default function CreateOrder() {
                 }}
                 error={
                   phoneNumber.trim() !== '' && !isPhoneNumberValid(phoneNumber)
-                }
-                helperText={
-                  phoneNumber.trim() !== '' && !isPhoneNumberValid(phoneNumber)
-                    ? 'Enter a valid PH mobile number (e.g., 09XXXXXXXXX)'
-                    : ' '
                 }
               />
             </div>
@@ -473,13 +504,43 @@ export default function CreateOrder() {
               >
                 <Select
                   value={paymentStatus}
-                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  onChange={(e) => {
+                    const nextStatus = e.target.value;
+                    setPaymentStatus(nextStatus);
+                    if (nextStatus !== 'Partial') {
+                      setPaidAmount('');
+                    }
+                  }}
                 >
                   <MenuItem value="Paid">Paid</MenuItem>
                   <MenuItem value="Unpaid">Unpaid</MenuItem>
+                  <MenuItem value="Partial">Partial</MenuItem>
                 </Select>
               </FormControl>
             </div>
+            {paymentStatus === 'Partial' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Amount Received <span className="text-red-500">*</span>
+                </label>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  value={paidAmount}
+                  onChange={(e) => handlePaidAmountChange(e.target.value)}
+                  placeholder="Enter partial payment amount"
+                  inputMode="decimal"
+                  onKeyDown={(e) => {
+                    if (['-', '+', 'e', 'E'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  sx={{ backgroundColor: '#f9fafb' }}
+                  helperText={`Total due: ₱${total.toLocaleString()}`}
+                />
+              </div>
+            )}
           </div>
 
           {/* Summary */}

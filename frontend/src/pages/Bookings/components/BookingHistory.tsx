@@ -65,11 +65,7 @@ export default function BookingHistory() {
         phone: b.phone_number,
         address: b.address,
         pickupDate: new Date(b.pickup_date).toLocaleDateString(),
-        pickupTime: new Date(b.pickup_date).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        createdAt: new Date(b.created_at || b.pickup_date).toLocaleString(),
+        createdAt: new Date(b.created_at).toLocaleString(),
         services: bundle
           ? bundle.service_name
           : mainServices.map((m: any) => m.service_name).join(', '),
@@ -284,166 +280,159 @@ export default function BookingHistory() {
 }
 
 function ModalContents({ selectedBooking }: { selectedBooking: any }) {
+  const createdDisplay = selectedBooking.createdAt;
+  const pickupDisplay = `${selectedBooking.pickupDate}`;
+  const supplies = selectedBooking.serviceDetails.supplies || [];
+  const mainServices = selectedBooking.serviceDetails.mainServices || [];
+
   return (
-    <>
-      <div className="my-4 space-y-6">
-        {/* Booking ID & Status */}
-        <div className="flex items-center justify-between pb-3 border-b">
-          <p className="text-sm text-blue-600 font-medium">Status</p>
+    <div className="space-y-5 text-sm text-gray-700">
+      <div className="flex flex-col gap-2 border-b pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-blue-600 font-semibold">
+            Booking #{selectedBooking.id}
+          </p>
           <span
-            className={`px-3 py-1 rounded-md text-xs font-medium text-white ${
+            className={`px-3 py-1 rounded-md text-xs font-semibold text-white ${
               statusStyle[selectedBooking.status.toLowerCase() as BookingStatus]
             }`}
           >
             {selectedBooking.status}
           </span>
         </div>
+        <p className="text-xs text-gray-500">
+          Created {createdDisplay} · Pickup {pickupDisplay}
+        </p>
+      </div>
 
-        {/* Customer Information */}
+      <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <div className="flex items-center gap-2 text-gray-600 mb-2">
+          <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-semibold mb-1">
             <PersonOutlineIcon sx={{ fontSize: 18 }} />
-            <h3 className="text-sm font-semibold">Customer Information</h3>
+            Customer
           </div>
-          <div className="pl-6 space-y-1 text-sm">
-            <div className="flex">
-              <span className="font-medium w-20">Name:</span>
-              <span className="text-gray-700">
-                {selectedBooking.customerName}
-              </span>
-            </div>
-            <div className="flex">
-              <span className="font-medium w-20">Phone:</span>
-              <span className="text-gray-700">{selectedBooking.phone}</span>
-            </div>
+          <div className="space-y-1">
+            <p>{selectedBooking.customerName}</p>
+            <p className="text-gray-500">{selectedBooking.phone}</p>
             {selectedBooking.email && (
-              <div className="flex">
-                <span className="font-medium w-20">Email:</span>
-                <span className="text-gray-700">{selectedBooking.email}</span>
-              </div>
+              <p className="text-gray-500">{selectedBooking.email}</p>
             )}
             {selectedBooking.address && (
-              <div className="flex">
-                <span className="font-medium w-20">Address:</span>
-                <span className="text-gray-700">{selectedBooking.address}</span>
-              </div>
+              <p className="text-gray-500">{selectedBooking.address}</p>
             )}
           </div>
         </div>
-
-        {/* Schedule */}
         <div>
-          <div className="flex items-center gap-2 text-gray-600 mb-2">
+          <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-semibold mb-1">
             <CalendarTodayOutlinedIcon sx={{ fontSize: 18 }} />
-            <h3 className="text-sm font-semibold">Schedule</h3>
+            Schedule
           </div>
-          <div className="pl-6 space-y-1 text-sm">
-            <div className="flex">
-              <span className="font-medium w-28">Pickup Date:</span>
-              <span className="text-gray-700">
-                {selectedBooking.pickupDate}
-              </span>
-            </div>
-            <div className="flex">
-              <span className="font-medium w-28">Pickup Time:</span>
-              <span className="text-gray-700">
-                {selectedBooking.pickupTime}
-              </span>
-            </div>
-            {selectedBooking.createdAt && (
-              <div className="flex">
-                <span className="font-medium w-28">Created:</span>
-                <span className="text-gray-700">
-                  {selectedBooking.createdAt}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Service Details */}
-        <div>
-          <div className="flex items-center gap-2 text-gray-600 mb-2">
-            <LocalShippingOutlinedIcon sx={{ fontSize: 18 }} />
-            <h3 className="text-sm font-semibold">Service Details</h3>
-          </div>
-          <div className="pl-6 space-y-2 text-sm">
-            {selectedBooking.serviceDetails.bundle && (
-              <div className="flex">
-                <span className="font-medium w-28">Service Type:</span>
-                <span className="text-blue-600 font-medium">
-                  {selectedBooking.serviceDetails.bundle}
-                </span>
-              </div>
-            )}
-            {selectedBooking.serviceDetails.mainServices.length > 0 && (
-              <div className="flex">
-                <span className="font-medium w-28">Services:</span>
-                <div className="flex-1">
-                  {selectedBooking.serviceDetails.mainServices.map(
-                    (s: any, i: number) => (
-                      <div key={i} className="text-gray-700">
-                        • {s.name} x{s.quantity}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
+          <div className="space-y-1">
+            <p>Pickup Date: {selectedBooking.pickupDate}</p>
             {selectedBooking.paymentType && (
-              <div className="flex">
-                <span className="font-medium w-28">Payment:</span>
-                <span className="text-gray-700">
-                  {selectedBooking.paymentType}
-                </span>
-              </div>
+              <p>Payment Type: {selectedBooking.paymentType}</p>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Supplies Needed */}
-        {selectedBooking.serviceDetails.supplies.length > 0 && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">
-              Supplies Needed:
-            </h3>
-            <div className="pl-6 space-y-1 text-sm">
-              {selectedBooking.serviceDetails.supplies.map(
-                (s: any, i: number) => (
-                  <div key={i} className="text-gray-700">
-                    • {s.name}:{' '}
-                    <span className="font-medium">{s.quantity}</span>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        )}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-semibold">
+          <LocalShippingOutlinedIcon sx={{ fontSize: 18 }} />
+          Services & Supplies
+        </div>
 
-        {/* Special Instructions */}
-        {selectedBooking.specialInstructions && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">
-              Special Instructions:
-            </h3>
-            <p className="pl-6 text-sm text-gray-700">
-              {selectedBooking.specialInstructions}
+        {selectedBooking.serviceDetails.bundle && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+            <p className="text-xs text-blue-700 uppercase font-semibold">
+              Bundle
+            </p>
+            <p className="text-sm font-medium text-blue-900">
+              {selectedBooking.serviceDetails.bundle}
             </p>
           </div>
         )}
 
-        {/* Total */}
-        <div className="pt-3 border-t">
-          <div className="flex justify-between items-center">
-            <span className="text-base font-semibold text-gray-700">
-              Total Amount:
-            </span>
-            <span className="text-lg font-bold text-gray-900">
-              ₱{selectedBooking.total.toLocaleString()}
-            </span>
+        {mainServices.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Main Services
+            </p>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-100 text-gray-600">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium">Service</th>
+                    <th className="text-right px-3 py-2 font-medium">Qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mainServices.map((item: any, idx: number) => (
+                    <tr
+                      key={`main-${idx}`}
+                      className="border-t border-gray-100"
+                    >
+                      <td className="px-3 py-2 text-gray-800">{item.name}</td>
+                      <td className="px-3 py-2 text-right text-gray-700">
+                        {item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
+
+        {supplies.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Supplies
+            </p>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-100 text-gray-600">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium">Item</th>
+                    <th className="text-right px-3 py-2 font-medium">Qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {supplies.map((item: any, idx: number) => (
+                    <tr
+                      key={`supply-${idx}`}
+                      className="border-t border-gray-100"
+                    >
+                      <td className="px-3 py-2 text-gray-800">{item.name}</td>
+                      <td className="px-3 py-2 text-right text-gray-700">
+                        {item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
-    </>
+
+      {selectedBooking.specialInstructions && (
+        <div className="rounded-lg bg-gray-50 border border-gray-200 p-3">
+          <p className="text-xs uppercase text-gray-500 font-semibold mb-1">
+            Special Instructions
+          </p>
+          <p className="text-gray-700">{selectedBooking.specialInstructions}</p>
+        </div>
+      )}
+
+      <div className="pt-3 border-t flex justify-between items-center">
+        <span className="text-base font-semibold text-gray-700">
+          Total Amount
+        </span>
+        <span className="text-lg font-bold text-gray-900">
+          ₱{selectedBooking.total.toLocaleString()}
+        </span>
+      </div>
+    </div>
   );
 }
